@@ -1,0 +1,217 @@
+* {
+	box-sizing: border-box;
+	margin: 0;
+	border: none;
+}
+
+body {
+	min-height: 60vh;
+	font-family: "Pixelify Sans", sans-serif;
+	background-color: #b9dceb;
+}
+
+main {
+	padding-bottom: 80px;
+}
+
+button {
+	font-family: "Pixelify Sans", sans-serif;
+}
+
+input,
+password {
+	font-family: "Pixelify Sans", sans-serif;
+}
+
+select {
+	font-family: "Pixelify Sans", sans-serif;
+}
+
+textarea {
+	font-family: "Pixelify Sans", sans-serif;
+}
+
+h1 {
+	display: flex;
+	justify-content: center; 
+	padding: 15px;
+}
+
+a {
+	text-decoration: none;
+	color: #787878;
+}
+
+form {
+	text-align: center;
+}
+
+.lognav {
+	display: block;
+	justify-content: center;
+	text-align: center;
+}
+
+.loginput {
+	font-size: 18px;
+	padding: 10px;
+
+	border: 2px solid #ccc;
+	border-radius: 16px;
+	outline: none;
+
+	display: block;
+	margin: 6px auto;
+	width: 40%;
+	height: 50px;
+	justify-content: center;	
+}
+
+
+textarea.loginput {
+	resize: none;
+	overflow: hidden;
+	height: 80px;
+}
+
+.logbut {
+	font-size: 18px;
+	padding: 0px;
+
+	border: 2px solid #ccc;
+	border-radius: 16px;
+	outline: none;
+
+	display: block;
+	margin: 6px auto;
+	width: 40%;
+	height: 40px;
+	justify-content: center;	
+}
+
+.logbut {
+	cursor: pointer;
+}
+
+.form {
+	justify-content: center;
+	text-align: center;
+}
+
+.moving-image {
+	position: absolute;
+	left: 10%;
+	bottom: 20px;
+	justify-content: center;
+	width: 40%;
+	z-index: 0;
+}
+
+
+.navbar {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	display: flex;
+
+	background-color:blue;
+}
+
+.navbar a:hover {
+	background-color: red;
+}
+
+.navitem {
+	flex: 1;
+	text-align: center;
+	padding: 15px 10px;
+
+	user-select: none;
+	cursor: pointer;
+
+	text-decoration: none;
+	color: grey;
+}
+
+
+.navitem:hover {
+	color: yellow;
+}
+
+.navitem.active {
+	color: white;
+	font-weight: bold;
+}
+
+.navbar .navitem.active {
+	background-color: #6c63ff;
+	color: white;
+}
+
+.navbar img {
+	width: 28px;
+	height: auto;
+	object-fit: contain;
+}
+
+.home {
+	text-align: center;
+	padding: 10px;
+}
+
+.tasks {
+	width: 100%;
+	margin: 20px auto;
+}
+
+.task-card {
+	width: 40%;
+	margin: 20px auto;
+	padding: 15px;
+
+	border: 2px solid #ccc;
+	border-radius: 16px;
+
+	text-align: left;
+
+	background-color: #fff;
+}
+
+.task-card h2 {
+	padding: 6px;
+	color: #000;
+}
+
+
+.task-card p {
+	padding: 6px;
+	color: #787878;
+	word-spacing: 2px;
+}
+
+.task-card a {
+	text-decoration: none;
+	color: #000;
+}
+
+.profile {
+	text-align: center;
+}
+
+.profile h3 {
+	font-size: 16px;
+	color: #787878;
+	margin-bottom: 20px;
+}
+
+.profilepic {
+	width: 64px;
+	height: auto;
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+
+	padding: 10px;
+	box-sizing: content-box;
+}

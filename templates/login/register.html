@@ -1,0 +1,81 @@
+{% extends "login/login_base.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+
+<h1>Sign-up</h1>
+	
+<form method="POST" action="/register" class="form">
+	<fieldset>
+		<input
+			type="text"
+			name="name"
+			id="name"
+			class="loginput"
+			placeholder="Name"
+			required>
+		<input
+			type="text"
+			name="surname"
+			id="surname"
+			class="loginput"
+			placeholder="Surname"
+			required>
+		<input
+			type="text"
+			name="displayname"
+			id="displayname"
+			class="loginput"
+			placeholder="Nickname"
+			required>
+		<input
+			type="date"
+			name="birthdate"
+			id="birthdate"
+			class="loginput"
+			placeholder="Birthdate"
+			required max="{{today}}"
+			value="{{default_birthdate}}">
+		<input
+			type="text"
+			name="email"
+			id="email"
+			class="loginput"
+			placeholder="E-mail"
+			required>
+		<input
+			type="password"
+			name="password"
+			id="password"
+			class="loginput"
+			placeholder="Password"
+			required>
+		<input
+			type="password"
+			name="passcon"
+			id="passcon"
+			class="loginput"
+			placeholder="Confirm Password"
+			required>
+
+		<button
+			type="submit"
+			class="logbut">
+			SIGN-UP
+		</button>
+	</fieldset>
+		<p
+		class="lognav">
+		Do you already have an account?
+	</p>
+	<a
+		href="/login"
+		class="lognav">
+		Login
+	</a>
+
+</form>
+	
+
+{% endblock %}

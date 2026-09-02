@@ -1,0 +1,52 @@
+/*.tasks {
+	width: 100%;
+	margin: 20px auto;
+	text-align: left;
+}
+
+p.home-task {
+	color: #787878;
+	padding: 6px;
+}
+
+
+/*.tasks h2,
+.tasks h3,
+.tasks p{
+	padding: 6px;
+}*/
+
+.task-card {
+	width: 60%;
+	margin: 20px 0;
+}
+
+.task-card h3 {
+	padding: 6px;
+	/*border: 2px solid #787878;
+	border-radius: 16px;*/	
+	width: 100%;
+	
+}
+
+.task-card p {
+	padding: 6px;
+	word-spacing: 2px;
+}
+
+/*.task-card h3:has(.urgent-task) {
+	border: 2px solid yellow;
+}
+
+.task-card h3:has(.overdue-task) {
+	border: 2px solid red;
+}*/
+
+
+.urgent-task {
+	color: yellow;
+}
+
+.overdue-task {
+	color: red;
+}*/

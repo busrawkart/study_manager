@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}
+Edit Profile
+{% endblock %}
+
+{% block content %}
+
+
+<div>	
+	<form method = "POST">
+		<input
+			type="text"
+			name="name"
+			id="name"
+			class="loginput"
+			value="{{user['name']}}"
+			placeholder="Name"
+			required>
+	
+		<input
+			type="text"
+			name="surname"
+			id="surname"
+			class="loginput"			
+			value="{{user['surname']}}"
+			placeholder="Surname"
+			required>	
+
+		<input
+			type="text"
+			name="display_name"
+			id="display_name"
+			class="loginput"
+			value="{{user['display_name']}}"
+			placeholder="Nickname"
+			required>
+
+		<input
+			type="date"
+			name="birthdate"
+			id="birthdate"
+			class="loginput"
+			value="{{user['birthdate']}}"
+			required>
+
+		<input
+			type="text"
+			name="email"
+			id="email"
+			class="loginput"
+			value="{{user['email']}}"
+			placeholder="E-mail"
+			required>
+
+		<button
+			type="submit"
+			class="logbut">
+			SAVE
+		</button>
+		<a
+			href="/profile">
+			<button
+				type="button"
+				class="logbut">
+				BACK
+			</button>
+		</a>
+		
+	</div>
+
+</div>
+
+{% endblock %}

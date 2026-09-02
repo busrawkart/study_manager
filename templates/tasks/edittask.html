@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}
+Edit task
+{% endblock %}
+
+{% block content %}
+
+<h1>Edit task</h1>
+
+<form method = "POST">
+
+	<select
+		name="category_id"
+		id="category"
+		class="loginput"
+		required>
+		<option
+			value="">
+			Select a category
+		</option>
+		{% for category in categories %}
+			<option value="{{category['category_id']}}"
+			{% if category['category_id']==task['category_id'] %}selected{% endif %}
+			>
+				{{category['category_name']}}	
+			</option>
+		{% endfor %}
+
+		<option
+			value="new">
+			+ New category
+		</option>
+	</select>
+
+	<div
+		id="newcat"
+		style="display: none;">
+		<input type="text"
+			name="newcat"
+			placeholder="New category name">
+	</div>
+
+	<select
+		name="course_id"
+		id="course"
+		class="loginput"
+		required>
+		<option
+			value="">
+			Select a course
+		</option>
+		{% for course in courses %}
+			<option value="{{course['course_id']}}"
+			{% if course['course_id']==task['course_id'] %}selected{% endif %}
+
+			>
+				{{course['course_name']}}	
+			</option>
+		{% endfor %}
+
+		<option
+			value="new">
+			+ New course
+		</option>
+	</select>
+
+	<div
+		id="newcourse"
+		style="display: none;">
+		<input
+			type="text"
+			name="newcourse"
+			placeholder="New course name">
+	</div>
+	
+	<input
+		type="text"
+		name="taskname"
+		id="taskname"
+		class="loginput"
+		value="{{task['task_name']}}"
+		placeholder="Name"
+		required>
+	
+	<textarea
+		rows="2"
+		cols="15"
+		name="taskdesc"
+		id="taskdesc"
+		class="loginput">{{task['description']}}
+	</textarea>
+
+	<input
+		type="datetime-local"
+		name="deadline"
+		id="deadline"
+		class="loginput"
+		value="{{task['deadline']}}">
+
+	<button
+		type="submit"
+		class="logbut">
+		UPDATE</button>
+	<a
+		href="{{url_for('tasks')}}">
+		<button
+			type="button"
+			class="logbut">
+			BACK
+		</button>
+	</a>
+</form>
+
+<script>
+
+	const category = document.getElementById("category");
+	const newcat = document.getElementById("newcat");
+
+	category.addEventListener("change", function() {
+
+		if (this.value === "new") {
+			newcat.style.display = "block";
+		} else {
+			newcat.style.display = "none";
+		}
+
+	});
+
+
+	const course = document.getElementById("course");
+	const newcourse = document.getElementById("newcourse");
+
+	course.addEventListener("change", function() {
+
+		if (this.value === "new") {
+			newcourse.style.display = "block";
+		} else {
+			newcourse.style.display = "none";
+		}
+
+	});
+
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>{% block title %}Study Manager{% endblock %}</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+
+</head>
+
+<body>
+
+	<main>
+		{% block content %}
+		{% endblock %}
+	</main>
+
+	<nav class="navbar">
+		<a class="navitem {% if request.endpoint == 'home' %}active{% endif %}" href="/">HOME</a>
+		<a class="navitem {% if request.endpoint == 'addtask' %}active{% endif %}" href="/addtask">ADD A TASK</a>
+		<a class="navitem {% if request.endpoint == 'tasks' %}active{% endif %}" href="/tasks">TASKS</a>
+		<a class="navitem {% if request.endpoint == 'profile' %}active{% endif %}" href="/profile">PROFILE</a>
+		
+	</nav>
+</body>
+</html>

@@ -1,0 +1,40 @@
+{% extends "login/login_base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+
+<h1>WELCOME</h1>
+	
+<form method="POST" action="/login" class="form">
+	<fieldset>
+		<input
+			type="email"
+			name="email"
+			id="email"
+			class="loginput"
+			placeholder="E-mail"
+			required>
+		<input
+			type="password"
+			name="password"
+			id="password"
+			class="loginput"
+			placeholder="Password"
+			required>
+		<button
+			type="submit"
+			class="logbut">LOGIN</button>
+	</fieldset>
+	<a
+		href="/resetpassword"
+		class="lognav">
+		Forgot password
+	</a>
+	<a
+		href="/register">
+		Sign-up
+	</a>
+</form>
+	
+{% endblock %}

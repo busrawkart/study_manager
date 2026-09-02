@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}
+Profile
+{% endblock %}
+
+{% block content %}
+
+
+<div>
+	<div class="profile">
+		<img
+			src="{{ url_for('static', filename='img/profile.png') }}"
+			class="profilepic">
+		<h2>{{user["display_name"]}}</h2>
+		<h3>{{user["email"]}}</h3>
+	</div>
+	
+	<div>
+		<a
+			href="/editprofile">
+			<button
+				type="button"
+				class="logbut">
+				Edit profile
+			</button>
+		</a>
+		<a
+			href="/changepassword">
+			<button
+				type="button"
+				class="logbut">
+				Change password
+			</button>
+		</a>
+		<a
+			href="/logout">
+			<button
+				type="button"
+				class="logbut">
+				Log Out
+			</button>
+		</a>
+	</div>
+
+</div>
+
+{% endblock %}
