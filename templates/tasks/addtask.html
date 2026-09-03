@@ -9,7 +9,10 @@ Add a task
 <h1>Add a task</h1>
 
 <form method = "POST">
-
+	<input
+		type="hidden"
+		name="csrf_token"
+		value="{{ csrf_token() }}">
 	<select
 		id="category"
 		name="category_id"
@@ -61,7 +64,6 @@ Add a task
 		class="loginput"
 		placeholder="Name"
 		required>
-	
 	<textarea
 		rows="2"
 		cols="15"
@@ -69,7 +71,6 @@ Add a task
 		id="taskdesc"
 		class="loginput"
 		placeholder="Description"></textarea>
-
 	<input
 		type="datetime-local"
 		name="deadline"
@@ -77,7 +78,6 @@ Add a task
 		class="loginput"
 		placeholder="Deadline"
 		required>
-
 	<button
 		type="submit"
 		class="logbut">
@@ -95,15 +95,17 @@ Add a task
 
 	const category = document.getElementById("category");
 	const newcat = document.getElementById("newcat");
+	const newcatinput = document.querySelector("input[name='newcat']");
 
-	category.addEventListener("change", function() {
+	category.addEventListener("change", function(){
 
-		if (this.value === "new") {
+		if (this.value === "new"){
 			newcat.style.display = "block";
 			newcatinput.required = true;
-		} else {
+		} else{
 			newcat.style.display = "none";
 			newcatinput.required = false;
+			newcatinput.value = "";
 		}
 
 	});
@@ -111,15 +113,17 @@ Add a task
 
 	const course = document.getElementById("course");
 	const newcourse = document.getElementById("newcourse");
+	const newcourseinput = document.querySelector("input[name='newcourse']");
 
-	course.addEventListener("change", function() {
+	course.addEventListener("change", function(){
 
-		if (this.value === "new") {
+		if (this.value === "new"){
 			newcourse.style.display = "block";
 			newcourseinput.required = true;
-		} else {
+		} else{
 			newcourse.style.display = "none";
 			newcourseinput.required = false;
+			newcourseinput.value = "";
 		}
 
 	});

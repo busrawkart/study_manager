@@ -9,6 +9,10 @@
 <form method="POST" action="/login" class="form">
 	<fieldset>
 		<input
+			type="hidden"
+			name="csrf_token"
+			value="{{ csrf_token() }}">
+		<input
 			type="email"
 			name="email"
 			id="email"

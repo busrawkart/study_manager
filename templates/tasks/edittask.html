@@ -9,7 +9,10 @@ Edit task
 <h1>Edit task</h1>
 
 <form method = "POST">
-
+	<input
+		type="hidden"
+		name="csrf_token"
+		value="{{ csrf_token() }}">
 	<select
 		name="category_id"
 		id="category"
@@ -38,6 +41,7 @@ Edit task
 		style="display: none;">
 		<input type="text"
 			name="newcat"
+			class="loginput"
 			placeholder="New category name">
 	</div>
 
@@ -71,6 +75,7 @@ Edit task
 		<input
 			type="text"
 			name="newcourse"
+			class="loginput"
 			placeholder="New course name">
 	</div>
 	
@@ -116,29 +121,35 @@ Edit task
 
 	const category = document.getElementById("category");
 	const newcat = document.getElementById("newcat");
+	const newcatinput = document.querySelector("input[name='newcat']");
 
-	category.addEventListener("change", function() {
+	category.addEventListener("change", function(){
 
-		if (this.value === "new") {
+		if (this.value === "new"){
 			newcat.style.display = "block";
-		} else {
+			newcatinput.required = true;
+		} else{
 			newcat.style.display = "none";
+			newcatinput.required = false;
+			newcatinput.value = "";
 		}
-
 	});
 
 
 	const course = document.getElementById("course");
 	const newcourse = document.getElementById("newcourse");
+	const newcourseinput = document.querySelector("input[name='newcourse']");
 
 	course.addEventListener("change", function() {
 
-		if (this.value === "new") {
+		if (this.value === "new"){
 			newcourse.style.display = "block";
-		} else {
+			newcourseinput.required = true;
+		} else{
 			newcourse.style.display = "none";
+			newcourseinput.required = false;
+			newcourseinput.value = "";
 		}
-
 	});
 
 </script>

@@ -33,14 +33,18 @@ Profile
 				Change password
 			</button>
 		</a>
-		<a
-			href="/logout">
+		
+		<form method="POST" action="/logout">
+			<input
+				type="hidden"
+				name="csrf_token"
+				value="{{ csrf_token() }}">
 			<button
-				type="button"
+				type="submit"
 				class="logbut">
 				Log Out
 			</button>
-		</a>
+		</form>
 	</div>
 
 </div>

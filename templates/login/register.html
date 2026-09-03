@@ -9,6 +9,10 @@
 <form method="POST" action="/register" class="form">
 	<fieldset>
 		<input
+			type="hidden"
+			name="csrf_token"
+			value="{{ csrf_token() }}">
+		<input
 			type="text"
 			name="name"
 			id="name"

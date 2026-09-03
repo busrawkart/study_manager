@@ -9,12 +9,15 @@ from datetime import date, datetime, timedelta
 from email.message import EmailMessage
 from functools import wraps
 from dotenv import load_dotenv
+from flask_wtf.csrf import CSRFProtect
 
 load_dotenv()
 
 app = Flask(__name__)
 
 app.secret_key = os.getenv("SECRET_KEY")
+
+csrf = CSRFProtect(app)
 
 def login_required(func):
 	@wraps(func)
@@ -330,7 +333,11 @@ def addtask():
 
 		if category_id == "new":
 
-			newcat = request.form["newcat"].strip()
+			newcat = request.form.get("newcat","").strip()
+			
+			if not newcat:
+				connection.close()
+				return "Category name cannot be empty"
 
 			connection.execute("""
 				INSERT INTO categories
@@ -362,7 +369,11 @@ def addtask():
 
 		if course_id == "new":
 
-			newcourse = request.form["newcourse"].strip()
+			newcourse = request.form.get("newcourse","").strip()
+		
+			if not newcourse:
+				connection.close()
+				return "Course name cannot be empty"
 
 			connection.execute("""
 				INSERT INTO courses
@@ -791,7 +802,7 @@ def changepassword():
 
 	return render_template("profile/changepassword.html")
 
-@app.route("/logout")
+@app.route("/logout", methods=["POST"])
 @login_required
 def logout():
 	session.clear()

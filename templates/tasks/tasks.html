@@ -38,6 +38,10 @@ My Tasks
 					action="{{ url_for('delete_task', task_id=task['task_id']) }}"
 					method="POST"
 					onsubmit="return confirm('Are you sure you want to delete this task?');">
+					<input
+						type="hidden"
+						name="csrf_token"
+						value="{{ csrf_token() }}">
 					<button
 						type="submit"
 						class="logbut">
