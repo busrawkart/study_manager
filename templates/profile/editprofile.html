@@ -6,6 +6,9 @@ Edit Profile
 
 {% block content %}
 
+{% if error %}
+	<p class="error">{{ error }}</p>
+{% endif %}
 
 <div>	
 	<form method = "POST">
@@ -18,7 +21,7 @@ Edit Profile
 			name="name"
 			id="name"
 			class="loginput"
-			value="{{user['name']}}"
+			value="{{ form.get('name') if form else user['name'] }}"
 			placeholder="Name"
 			required>
 		<input
@@ -26,7 +29,7 @@ Edit Profile
 			name="surname"
 			id="surname"
 			class="loginput"			
-			value="{{user['surname']}}"
+			value="{{ form.get('surname') if form else user['surname'] }}"
 			placeholder="Surname"
 			required>	
 		<input
@@ -34,7 +37,7 @@ Edit Profile
 			name="display_name"
 			id="display_name"
 			class="loginput"
-			value="{{user['display_name']}}"
+			value="{{ form.get('display_name') if form else user['display_name'] }}"
 			placeholder="Nickname"
 			required>
 		<input
@@ -42,14 +45,14 @@ Edit Profile
 			name="birthdate"
 			id="birthdate"
 			class="loginput"
-			value="{{user['birthdate']}}"
+			value="{{ form.get('birthdate') if form else user['birthdate'] }}"
 			required>
 		<input
 			type="text"
 			name="email"
 			id="email"
 			class="loginput"
-			value="{{user['email']}}"
+			value="{{ form.get('email') if form else user['email'] }}"
 			placeholder="E-mail"
 			required>
 		<button

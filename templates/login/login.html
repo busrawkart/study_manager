@@ -5,6 +5,10 @@
 {% block content %}
 
 <h1>WELCOME</h1>
+
+{% if error %}
+	<p class="error-message">{{ error }}</p>
+{% endif %}
 	
 <form method="POST" action="/login" class="form">
 	<fieldset>
@@ -18,6 +22,7 @@
 			id="email"
 			class="loginput"
 			placeholder="E-mail"
+			value="{{ form.get('email', '') }}"
 			required>
 		<input
 			type="password"

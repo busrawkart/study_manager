@@ -8,6 +8,10 @@ Add a task
 
 <h1>Add a task</h1>
 
+{% if error %}
+	<p class="error-message">{{ error }}</p>
+{% endif %}
+
 <form method = "POST">
 	<input
 		type="hidden"
@@ -20,18 +24,22 @@ Add a task
 		required>
 		<option value="">Select a category</option>
 		{% for category in categories %}
-			<option value = "{{category['category_id']}}">
+			<option value = "{{category['category_id']}}"
+			{% if form and form.get('category_id') == category['category_id'] | string %} selected {% endif %}>
 				{{category['category_name']}}	
 			</option>
 		{% endfor %}
 
-		<option value = "new">+ New category</option>
+		<option value = "new"
+			{% if form and form.get('category_id') == 'new' %} selected {% endif %}>
+			+ New category</option>
 	</select>
 
 	<div id = "newcat" style = "display: none;">
 		<input type = "text"
 			name = "newcat"
 			class="loginput"
+			value="{{ form.get('newcat', '') if form else '' }}"
 			placeholder = "New category name">
 	</div>
 
@@ -42,18 +50,22 @@ Add a task
 		required>
 		<option value="">Select a course</option>
 		{% for course in courses %}
-			<option value = "{{course['course_id']}}">
+			<option value = "{{course['course_id']}}"
+			{% if form and form.get('course_id') == course['course_id'] | string %} selected {% endif %}>
 				{{course['course_name']}}	
 			</option>
 		{% endfor %}
 
-		<option value = "new">+ New course</option>
+		<option value = "new"
+			{% if form and form.get('course_id') == 'new' %} selected {% endif %}>
+			+ New course</option>
 	</select>
 
 	<div id = "newcourse" style = "display: none;">
 		<input type = "text"
 			name = "newcourse"
 			class="loginput"
+			value="{{ form.get('newcourse', '') if form else '' }}"
 			placeholder = "New course name">
 	</div>
 	
@@ -62,6 +74,7 @@ Add a task
 		name="taskname"
 		id="taskname"
 		class="loginput"
+		value="{{ form.get('taskname', '') if form else '' }}"
 		placeholder="Name"
 		required>
 	<textarea
@@ -70,12 +83,13 @@ Add a task
 		name="taskdesc"
 		id="taskdesc"
 		class="loginput"
-		placeholder="Description"></textarea>
+		placeholder="Description">{{ form.get('taskdesc', '') if form else '' }}</textarea>
 	<input
 		type="datetime-local"
 		name="deadline"
 		id="deadline"
 		class="loginput"
+		value="{{ form.get('deadline', '') if form else '' }}"
 		placeholder="Deadline"
 		required>
 	<button
@@ -127,6 +141,16 @@ Add a task
 		}
 
 	});
+
+	if (category.value === "new"){
+		newcat.style.display = "block";
+		newcatinput.required = true;
+	}
+
+	if (course.value === "new"){
+		newcourse.style.display = "block";
+		newcourseinput.required = true;
+	}
 
 </script>
 

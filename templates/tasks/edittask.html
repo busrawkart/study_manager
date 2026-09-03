@@ -8,6 +8,10 @@ Edit task
 
 <h1>Edit task</h1>
 
+{% if error %}
+	<p class="error">{{ error }}</p>
+{% endif %}
+
 <form method = "POST">
 	<input
 		type="hidden"
@@ -24,14 +28,20 @@ Edit task
 		</option>
 		{% for category in categories %}
 			<option value="{{category['category_id']}}"
-			{% if category['category_id']==task['category_id'] %}selected{% endif %}
-			>
-				{{category['category_name']}}	
+			{% if form and form.get("category_id") == category['category_id'] | string %}
+				selected
+			{% elif not form and category['category_id']==task['category_id'] %}
+				selected
+			{% endif %}>
+				{{category['category_name']}}
 			</option>
 		{% endfor %}
 
 		<option
-			value="new">
+			value="new"
+			{% if form and form.get("category_id") == "new" %}
+				selected
+			{% endif %}>
 			+ New category
 		</option>
 	</select>
@@ -42,6 +52,7 @@ Edit task
 		<input type="text"
 			name="newcat"
 			class="loginput"
+			value="{{ form.get('newcat') if form else '' }}"
 			placeholder="New category name">
 	</div>
 
@@ -56,15 +67,20 @@ Edit task
 		</option>
 		{% for course in courses %}
 			<option value="{{course['course_id']}}"
-			{% if course['course_id']==task['course_id'] %}selected{% endif %}
-
-			>
+			{% if form and form.get("course_id") == course['course_id'] | string %}
+				selected
+			{% elif not form and course['course_id']==task['course_id'] %}
+				selected
+			{% endif %}>
 				{{course['course_name']}}	
 			</option>
 		{% endfor %}
 
 		<option
-			value="new">
+			value="new"
+			{% if form and form.get("course_id") == "new" %}
+				selected
+			{% endif %}>
 			+ New course
 		</option>
 	</select>
@@ -76,6 +92,7 @@ Edit task
 			type="text"
 			name="newcourse"
 			class="loginput"
+			value="{{ form.get('newcourse') if form else '' }}"
 			placeholder="New course name">
 	</div>
 	
@@ -84,7 +101,7 @@ Edit task
 		name="taskname"
 		id="taskname"
 		class="loginput"
-		value="{{task['task_name']}}"
+		value="{{ form.get('taskname') if form else task['task_name'] }}"
 		placeholder="Name"
 		required>
 	
@@ -93,15 +110,16 @@ Edit task
 		cols="15"
 		name="taskdesc"
 		id="taskdesc"
-		class="loginput">{{task['description']}}
-	</textarea>
+		class="loginput"
+		placeholder="Description">{{ form.get('taskdesc') if form else task['description'] }}</textarea>
 
 	<input
 		type="datetime-local"
 		name="deadline"
 		id="deadline"
 		class="loginput"
-		value="{{task['deadline']}}">
+		value="{{ form.get('deadline') if form else task['deadline'] }}"
+		required>
 
 	<button
 		type="submit"
@@ -133,6 +151,7 @@ Edit task
 			newcatinput.required = false;
 			newcatinput.value = "";
 		}
+		
 	});
 
 
@@ -151,6 +170,16 @@ Edit task
 			newcourseinput.value = "";
 		}
 	});
+
+	if (category.value === "new"){
+		newcat.style.display = "block";
+		newcatinput.required = true;
+	}
+
+	if (course.value === "new"){
+		newcourse.style.display = "block";
+		newcourseinput.required = true;
+	}
 
 </script>
 

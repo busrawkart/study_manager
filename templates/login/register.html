@@ -5,6 +5,10 @@
 {% block content %}
 
 <h1>Sign-up</h1>
+
+{% if error %}
+	<p class="error-message">{{ error }}</p>
+{% endif %}
 	
 <form method="POST" action="/register" class="form">
 	<fieldset>
@@ -17,6 +21,7 @@
 			name="name"
 			id="name"
 			class="loginput"
+			value="{{ form.get('name', '') }}"
 			placeholder="Name"
 			required>
 		<input
@@ -24,6 +29,7 @@
 			name="surname"
 			id="surname"
 			class="loginput"
+			value="{{ form.get('surname', '') }}"
 			placeholder="Surname"
 			required>
 		<input
@@ -31,6 +37,7 @@
 			name="displayname"
 			id="displayname"
 			class="loginput"
+			value="{{ form.get('displayname', '') }}"
 			placeholder="Nickname"
 			required>
 		<input
@@ -38,14 +45,15 @@
 			name="birthdate"
 			id="birthdate"
 			class="loginput"
+			value="{{ form.get('birthdate', default_birthdate) }}"
 			placeholder="Birthdate"
-			required max="{{today}}"
-			value="{{default_birthdate}}">
+			required max="{{today}}">
 		<input
 			type="text"
 			name="email"
 			id="email"
 			class="loginput"
+			value="{{ form.get('email', '') }}"
 			placeholder="E-mail"
 			required>
 		<input

@@ -2,8 +2,9 @@ import sqlite3
 import secrets
 import smtplib
 import os
+import hashlib
 
-from flask import Flask, render_template,request,redirect,url_for,session
+from flask import Flask, render_template,request,redirect,url_for,session,flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import date, datetime, timedelta
 from email.message import EmailMessage
@@ -69,16 +70,39 @@ def register():
 		passcon = request.form.get("passcon","")
 
 		if not name or not surname or not displayname or not birthdate or not email or not password or not passcon:
-			return "Please fill in all fields"
-
+			return render_template(
+				"login/register.html",
+				today=today,
+				default_birthdate=default_birthdate,
+				error="Please fill in all fields",
+				form=request.form
+			)
 		if password != passcon:
-			return "Passwords do not match"
+			return render_template(
+				"login/register.html",
+				today=today,
+				default_birthdate=default_birthdate,
+				error="Passwords do not match",
+				form=request.form
+			)
 
 		if len(password) < 8:
-			return "Password must be at least 8 characters"
+			return render_template(
+				"login/register.html",
+				today=today,
+				default_birthdate=default_birthdate,
+				error="Password must be at least 8 characters",
+				form=request.form
+			)
 
 		if "@" not in email:
-			return "Invalid email address"
+			return render_template(
+				"login/register.html",
+				today=today,
+				default_birthdate=default_birthdate,
+				error="Invalid e-mail",
+				form=request.form
+			)
 
 		password_hashed = generate_password_hash(password)
 
@@ -92,7 +116,13 @@ def register():
 
 		if existing_user is not None:
 			connection.close()
-			return "This email is already registered"
+			return render_template(
+				"login/register.html",
+				today=today,
+				default_birthdate=default_birthdate,
+				error="E-mail already in use",
+				form=request.form
+			)
 
 		connection.execute("""
 			INSERT INTO users
@@ -113,7 +143,11 @@ def register():
 
 		return redirect(url_for("login"))
 
-	return render_template("login/register.html", today=today, default_birthdate=default_birthdate)
+	return render_template(
+		"login/register.html",
+		today=today,
+		default_birthdate=default_birthdate,
+		form=request.form)
 
 @app.route("/login", methods=["GET","POST"])
 def login():
@@ -131,15 +165,22 @@ def login():
 		connection.close()
 
 		if user is None:
-			return "Email or password is incorrect"
+			return render_template(
+				"login/login.html",
+				error="Email or password is incorrect",
+				form=request.form)
 		if not check_password_hash(user["password_hashed"], password):
-			return "Email or password is incorrect"	
+			return render_template(
+				"login/login.html",
+				error="Email or password is incorrect",
+				form=request.form)
 
 		session["user_id"] = user["user_id"]		
 
 		return redirect(url_for("home"))
 
-	return render_template("login/login.html")
+	return render_template("login/login.html",
+						form=request.form)
 
 @app.route("/resetpassword", methods=["GET","POST"])
 def reset():
@@ -156,8 +197,15 @@ def reset():
 
 		if user:
 			user_id = user["user_id"]
+
+			connection.execute("""
+				DELETE FROM password_reset_tokens
+				WHERE user_id = ?
+			""",(user_id,))
 			
 			token = secrets.token_urlsafe(32)
+			token_hash = hashlib.sha256(token.encode()).hexdigest()
+
 			expires_at = datetime.now() + timedelta(minutes=30)
 
 			connection.execute("""
@@ -166,7 +214,7 @@ def reset():
 				VALUES(?,?,?)
 			""", (
 				user_id,
-				token,
+				token_hash,
 				expires_at,
 			))	
 	
@@ -190,25 +238,36 @@ def reset():
 def reset_password(token):
 	connection = get_db_connection()
 
+	token_hash = hashlib.sha256(token.encode()).hexdigest()
+
 	reset_token = connection.execute("""
 		SELECT * FROM password_reset_tokens
 		WHERE token = ?
-	""",(token,)).fetchone()
+	""",(token_hash,)).fetchone()
 
 
 	if reset_token is None:
 		connection.close()
-		return "Invalid"
+		return render_template(
+			"login/resetpassword.html",
+			token=token,
+			error="Invalid reset link")
 
 	if reset_token["used"] == 1:
 		connection.close()
-		return "Already used"
+		return render_template(
+			"login/newpassword.html",
+			token=token,
+			error="This reset link has already been used")
 
 	expires_at = datetime.fromisoformat(reset_token["expires_at"])
 
 	if datetime.now() > expires_at:
 		connection.close()
-		return "Expired"
+		return render_template(
+			"login/newpassword.html",
+			token=token,
+			error="This reset link has expired")
 
 	if request.method == "POST":
 		newpass = request.form["newpass"]
@@ -216,11 +275,19 @@ def reset_password(token):
 
 		if newpass != passcon:
 			connection.close()
-			return "Passwords do not match"
+			return render_template(
+				"login/newpassword.html",
+				token=token,
+				error="Passwords do not match"
+			)
 
 		if len(newpass) < 8:
 			connection.close()
-			return "Password must be at least 8 characters"
+			return render_template(
+				"login/newpassword.html",
+				token=token,
+				error="Password must be at least 8 characters"
+			)
 
 		user = connection.execute("""
 			SELECT password_hashed
@@ -230,7 +297,10 @@ def reset_password(token):
 
 		if check_password_hash(user["password_hashed"], newpass):
 			connection.close()
-			return "New password cannot be the same as the old password"
+			return render_template(
+				"login/newpassword.html",
+				token=token,
+				error="New password cannot be the same as the old password")
 
 		newpass_hashed = generate_password_hash(newpass)
 
@@ -247,8 +317,8 @@ def reset_password(token):
 		connection.execute("""
 			UPDATE password_reset_tokens
 			SET  used = 1
-			WHERE token = ?	
-			""",(token,))
+			WHERE user_id = ?	
+			""",(reset_token["user_id"],))
 	
 		connection.commit()
 		connection.close()
@@ -326,6 +396,29 @@ def addtask():
 	user_id = session["user_id"]
 
 	connection = get_db_connection()
+
+	def render_addtask_form(error=None):
+		categories = connection.execute("""
+			SELECT * FROM categories
+			WHERE user_id = ?
+			ORDER BY category_name
+		""", (user_id,)).fetchall()
+
+		courses = connection.execute("""
+			SELECT * FROM courses
+			WHERE user_id = ?
+			ORDER BY course_name
+		""", (user_id,)).fetchall()
+		
+		connection.close()
+
+		return render_template(
+			"tasks/addtask.html",
+			courses=courses,
+			categories=categories,
+			error=error,
+			form=request.form
+		)
 	
 	if request.method == "POST":
 		category_id = request.form["category_id"].strip()
@@ -336,8 +429,7 @@ def addtask():
 			newcat = request.form.get("newcat","").strip()
 			
 			if not newcat:
-				connection.close()
-				return "Category name cannot be empty"
+				return render_addtask_form("Category name cannot be empty")
 
 			connection.execute("""
 				INSERT INTO categories
@@ -353,8 +445,7 @@ def addtask():
 			).fetchone()[0]
 
 		if category_id is None:
-			connection.close()
-			return "Invalid category"
+			return render_addtask_form("Invalid category")
 
 		category = connection.execute("""
 					SELECT category_id
@@ -364,16 +455,14 @@ def addtask():
 				""", (category_id, user_id)).fetchone()
 
 		if category is None:
-			connection.close()
-			return "Invalid category"
+			return render_addtask_form("Invalid category")
 
 		if course_id == "new":
 
 			newcourse = request.form.get("newcourse","").strip()
 		
 			if not newcourse:
-				connection.close()
-				return "Course name cannot be empty"
+				return render_addtask_form("Course name cannot be empty")
 
 			connection.execute("""
 				INSERT INTO courses
@@ -389,8 +478,7 @@ def addtask():
 			).fetchone()[0]
 
 		if course_id is None:
-			connection.close()
-			return "Invalid course"
+			return render_addtask_form("Invalid course")
 
 		course = connection.execute("""
 			SELECT course_id
@@ -400,8 +488,7 @@ def addtask():
 		""", (course_id, user_id)).fetchone()
 
 		if course is None:
-			connection.close()
-			return "Invalid course"
+			return render_addtask_form("Invalid course")
 
 		task_name = request.form["taskname"]
 		description = request.form["taskdesc"]
@@ -442,7 +529,7 @@ def addtask():
 	return render_template(
 		"tasks/addtask.html",
 		courses=courses,
-		categories=categories
+		categories=categories,
 	)
 
 @app.route("/tasks")
@@ -479,7 +566,7 @@ def tasks():
 		deadline = datetime.fromisoformat(task["deadline"])
 		task["deadline_formatted"] = deadline.strftime("%d.%m.%Y %H:%M")	
 
-	return render_template("tasks/tasks.html", tasks=tasks)
+	return render_template("tasks/tasks.html",tasks=tasks)
 
 @app.route("/task/<int:task_id>")
 @login_required
@@ -542,6 +629,32 @@ def edittask(task_id):
 		AND user_id = ?
 	""", (task_id, user_id)).fetchone()
 
+	def render_edit_task_form(error=None):
+		categories = connection.execute("""
+			SELECT *
+			FROM categories
+			WHERE user_id = ?
+			ORDER BY category_name
+		""", (user_id,)).fetchall()
+
+		courses = connection.execute("""
+			SELECT *
+			FROM courses
+			WHERE user_id = ?
+			ORDER BY course_name
+		""", (user_id,)).fetchall()
+
+		connection.close()
+
+		return render_template(
+			"tasks/edittask.html",
+			task=task,
+			categories=categories,
+			courses=courses,
+			error=error,
+			form=request.form
+		)
+
 	if task is None:
 		connection.close()
 		return "Task not found"
@@ -553,7 +666,10 @@ def edittask(task_id):
 
 		if category_id == "new":
 
-			newcat = request.form["newcat"]
+			newcat = request.form.get("newcat","").strip()
+
+			if not newcat:
+				return render_edit_task_form("Category name cannot be empty")
 
 			connection.execute("""
 				INSERT INTO categories
@@ -570,7 +686,10 @@ def edittask(task_id):
 
 		if course_id == "new":
 
-			newcourse = request.form["newcourse"]
+			newcourse = request.form.get("newcourse","").strip()
+
+			if not newcourse:
+				return render_edit_task_form("Course name cannot be empty")
 
 			connection.execute("""
 				INSERT INTO courses
@@ -593,8 +712,7 @@ def edittask(task_id):
 		""", (category_id, user_id)).fetchone()
 
 		if category is None:
-			connection.close()
-			return "Invalid category"
+			return render_edit_task_form("Invalid category")
 
 		course = connection.execute("""
 			SELECT course_id
@@ -604,8 +722,7 @@ def edittask(task_id):
 		""", (course_id, user_id)).fetchone()
 
 		if course is None:
-			connection.close()
-			return "Invalid course"
+			return render_edit_task_form("Invalid course")
 
 		task_name = request.form["taskname"]
 		description = request.form["taskdesc"]
@@ -701,6 +818,21 @@ def editprofile():
 
 	user_id = session["user_id"]
 
+	def render_edit_profile_form(error=None):
+		user = connection.execute("""
+			SELECT * FROM users
+			WHERE user_id = ?
+		""", (user_id,)).fetchone()
+
+		connection.close()
+
+		return render_template(
+			"profile/editprofile.html",
+			user=user,
+			error=error,
+			form=request.form
+		)
+
 	if request.method == "POST":
 		
 		name = request.form["name"]
@@ -719,8 +851,7 @@ def editprofile():
 		""", (email, user_id)).fetchone()
 
 		if existing_user is not None:
-			connection.close()
-			return "This email is already in use"
+			return render_edit_profile_form("E-mail already in use")
 			
 		connection.execute(""" 
 			UPDATE users
@@ -763,6 +894,23 @@ def changepassword():
 	
 	user_id = session["user_id"]
 
+	def render_change_password_form(error=None):
+		connection = get_db_connection()
+
+		user = connection.execute("""
+			SELECT * FROM users
+			WHERE user_id = ?
+		""", (user_id,)).fetchone()
+
+		connection.close()
+
+		return render_template(
+			"profile/changepassword.html",
+			user=user,
+			error=error,
+			form=request.form
+		)
+
 	if request.method == "POST":
 		
 		oldpass = request.form["oldpass"]
@@ -776,15 +924,12 @@ def changepassword():
 		""", (user_id,)).fetchone()	
 	
 		if len(newpass) < 8:
-			connection.close()
-			return "Password must be at least 8 characters"
+			return render_change_password_form("Password must be at least 8 characters")
 
 		if not check_password_hash(user["password_hashed"], oldpass):
-			connection.close()
-			return "Old password is incorrect"
+			return render_change_password_form("Old password is incorrect")
 		if newpass != conpass:
-			connection.close()
-			return "Password do not match"
+			return render_change_password_form("New passwords do not match")
 
 		newpass_hashed = generate_password_hash(newpass)
 		
