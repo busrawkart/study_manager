@@ -18,7 +18,10 @@ button {
 	font-family: "Pixelify Sans", sans-serif;
 }
 
-input,
+input {
+	font-family: "Pixelify Sans", sans-serif;
+}
+
 password {
 	font-family: "Pixelify Sans", sans-serif;
 }
@@ -35,6 +38,14 @@ h1 {
 	display: flex;
 	justify-content: center; 
 	padding: 15px;
+	
+	font-size: 40px;
+}
+
+h2 {
+	font-size: 26px;
+
+
 }
 
 a {
@@ -44,6 +55,15 @@ a {
 
 form {
 	text-align: center;
+}
+
+.error-message {
+	font-size: 20px;
+	color: #787878;
+	text-align: center;
+	padding: 2px;
+	margin: 10px auto;
+	position: static;
 }
 
 .lognav {
@@ -116,6 +136,8 @@ textarea.loginput {
 	display: flex;
 
 	background-color:blue;
+
+	font-size: 20px;
 }
 
 .navbar a:hover {
@@ -214,4 +236,43 @@ textarea.loginput {
 
 	padding: 10px;
 	box-sizing: content-box;
+}
+
+
+@media (max-width: 768px) {
+
+	.navbar {
+		font-size: 16px;
+	}
+
+	
+
+	h1 {
+		font-size: 24px;
+	}
+
+	h2 {
+		font-size: 20px;
+	}
+	
+	.tasks {
+		width: 100%;
+		margin: 20px auto;
+	}
+
+	.task-card {
+		width: 80%;
+		margin: 20px auto;
+		padding: 12px;
+	}
+
+	.logbut {
+		width: 80%;	
+	}
+
+	.loginput {
+		margin: 6px auto;
+		width: 80%;
+	}
+
 }
