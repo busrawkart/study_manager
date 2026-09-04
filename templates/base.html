@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>{% block title %}Study Manager{% endblock %}</title>
 	<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
@@ -20,7 +21,7 @@
 
 	<nav class="navbar">
 		<a class="navitem {% if request.endpoint == 'home' %}active{% endif %}" href="/">HOME</a>
-		<a class="navitem {% if request.endpoint == 'addtask' %}active{% endif %}" href="/addtask">ADD A TASK</a>
+		<a class="navitem {% if request.endpoint == 'addtask' %}active{% endif %}" href="/addtask">+</a>
 		<a class="navitem {% if request.endpoint == 'tasks' %}active{% endif %}" href="/tasks">TASKS</a>
 		<a class="navitem {% if request.endpoint == 'profile' %}active{% endif %}" href="/profile">PROFILE</a>
 		

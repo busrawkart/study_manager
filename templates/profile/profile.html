@@ -9,9 +9,44 @@ Profile
 
 <div>
 	<div class="profile">
-		<img
-			src="{{ url_for('static', filename='img/profile.png') }}"
-			class="profilepic">
+
+		<form
+			method="POST"
+			action="{{ url_for('uploadprofilephoto') }}"
+			enctype="multipart/form-data">
+			
+			<input
+				type="hidden"
+				name="csrf_token"
+				value="{{ csrf_token() }}">
+
+			<label
+				class="profile-photo-upload">
+
+				{% if user['profile_photo'] %}
+
+					<img
+						src="{{ url_for('static', filename='uploads/profile/' + user['profile_photo']) }}"
+						alt="Profile Photo"
+						class="profile-photo">
+				{% else %}
+					<img 
+						src="{{ url_for('static', filename='img/profile.png') }}"
+						class="profile-photo">
+				{% endif %}
+
+				<span class="photo-button">+</span>
+
+				<input
+					type="file"
+					name="profile_photo"
+					accept=".png, .jpg, .jpeg, .gif, .webp"
+					onchange="this.form.submit()">
+
+			</label>
+		</form>
+
+			
 		<h2>{{user["display_name"]}}</h2>
 		<h3>{{user["email"]}}</h3>
 	</div>
@@ -46,7 +81,6 @@ Profile
 			</button>
 		</form>
 	</div>
-
 </div>
 
 {% endblock %}
