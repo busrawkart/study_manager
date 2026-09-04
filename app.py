@@ -574,6 +574,13 @@ def task_detail(task_id):
 
 	user_id = session["user_id"]
 
+	def render_task_detail(error=None):
+		return render_template(
+			"tasks/taskdetail.html",
+			error=error,
+			previous_page=url_for("tasks"),
+		)
+
 	connection = get_db_connection()
 
 	task = connection.execute("""
@@ -596,7 +603,7 @@ def task_detail(task_id):
 	connection.close()
 
 	if task is None:
-		return "Task not found"
+		return render_task_detail("Task not found")
 
 	deadline = datetime.fromisoformat(task["deadline"])
 	remaining = deadline - datetime.now()

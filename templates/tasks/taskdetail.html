@@ -6,6 +6,20 @@ Task Details
 
 {% block content %}
 
+{% if error %}
+	<p class="error">{{ error }}</p>
+
+	<a
+		href="{{ previous_page }}">
+		<button
+			type="button"
+			class="logbut">
+			BACK
+		</button>
+	</a>
+
+{% else %}
+
 <div class="tasks">
 
 	<h1>{{ task['task_name'] }}</h1>
@@ -58,5 +72,6 @@ Task Details
 	</a>
 </div>
 
+{% endif %}
 
 {% endblock %}
