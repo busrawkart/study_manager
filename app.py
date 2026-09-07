@@ -4,7 +4,7 @@ import smtplib
 import os
 import hashlib
 
-from flask import Flask, render_template,request,redirect,url_for,session,flash
+from flask import Flask, render_template,request,redirect,url_for,session,flash,jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from datetime import date, datetime, timedelta
@@ -196,7 +196,7 @@ def login():
 		return redirect(url_for("home"))
 
 	return render_template("login/login.html",
-						form=request.form)
+			form=request.form)
 
 @app.route("/resetpassword", methods=["GET","POST"])
 def reset():
@@ -822,6 +822,214 @@ def delete_task(task_id):
 	connection.close()
 
 	return redirect(url_for("tasks"))
+
+@app.route("/api/tasks", methods=["GET"])
+@login_required
+def api_get_tasks():
+
+	user_id = session["user_id"]
+
+	connection = get_db_connection()
+
+	tasks = connection.execute("""
+		SELECT
+			tasks.task_id,
+			tasks.task_name,
+			tasks.description,
+			tasks.deadline,
+			courses.course_name,
+			categories.category_name
+		FROM tasks
+		INNER JOIN courses
+			ON tasks.course_id = courses.course_id
+		INNER JOIN categories
+			ON tasks.category_id = categories.category_id
+		WHERE tasks.user_id = ?
+		ORDER BY tasks.deadline
+	""", (user_id,)).fetchall()
+
+	connection.close()
+
+	return jsonify([dict(task) for task in tasks])
+
+@app.route("/api/tasks/<int:task_id>", methods=["GET"])
+@login_required
+def api_get_task(task_id):
+
+	user_id = session["user_id"]
+
+	connection = get_db_connection()
+
+	task = connection.execute("""
+		SELECT
+			tasks.task_id,
+			tasks.task_name,
+			tasks.description,
+			tasks.deadline,
+			tasks.course_id,
+			tasks.category_id,
+			courses.course_name,
+			categories.category_name
+		FROM tasks
+		INNER JOIN courses
+			ON tasks.course_id = courses.course_id
+		INNER JOIN categories
+			ON tasks.category_id = categories.category_id
+		WHERE tasks.task_id = ?
+		AND tasks.user_id = ?
+	""", (task_id, user_id)).fetchone()
+
+	connection.close()
+
+	if task is None:
+		return jsonify({"error": "Task not found"}), 404
+
+	return jsonify(dict(task))
+
+
+@app.route("/api/tasks", methods=["POST"])
+@login_required
+def api_add_task():
+
+	user_id = session["user_id"]
+
+	data = request.get_json()
+
+	if not data:
+		return jsonify({"error": "JSON data is required"}), 400
+
+	task_name = data.get("task_name")
+	description = data.get("description", "")
+	deadline = data.get("deadline")
+	course_id = data.get("course_id")
+	category_id = data.get("category_id")
+
+	if not task_name or not deadline or not course_id or not category_id:
+		return jsonify({
+			"error": "task_name, deadline, course_id and category_id are required"
+		}), 400
+
+	connection = get_db_connection()
+
+	connection.execute("""
+		INSERT INTO tasks
+		(task_name, description, deadline, course_id, category_id, user_id)
+		VALUES (?, ?, ?, ?, ?, ?)
+	""", (
+		task_name,
+		description,
+		deadline,
+		course_id,
+		category_id,
+		user_id
+	))
+
+	connection.commit()
+
+	task_id = connection.execute(
+		"SELECT last_insert_rowid()"
+	).fetchone()[0]
+
+	connection.close()
+
+	return jsonify({
+		"message": "Task created successfully",
+		"task_id": task_id
+	}), 201
+
+@app.route("/api/tasks/<int:task_id>", methods=["PUT"])
+@login_required
+def api_update_task(task_id):
+
+	user_id = session["user_id"]
+
+	data = request.get_json()
+
+	if not data:
+		return jsonify({"error": "JSON data is required"}), 400
+
+	connection = get_db_connection()
+
+	task = connection.execute("""
+		SELECT task_id
+		FROM tasks
+		WHERE task_id = ?
+		AND user_id = ?
+	""", (task_id, user_id)).fetchone()
+
+	if task is None:
+		connection.close()
+		return jsonify({"error": "Task not found"}), 404
+
+	task_name = data.get("task_name")
+	description = data.get("description", "")
+	deadline = data.get("deadline")
+	course_id = data.get("course_id")
+	category_id = data.get("category_id")
+
+	if not task_name or not deadline or not course_id or not category_id:
+		connection.close()
+		return jsonify({
+			"error": "task_name, deadline, course_id and category_id are required"
+		}), 400
+
+	connection.execute("""
+		UPDATE tasks
+		SET task_name = ?,
+			description = ?,
+			deadline = ?,
+			course_id = ?,
+			category_id = ?
+		WHERE task_id = ?
+		AND user_id = ?
+	""", (
+		task_name,
+		description,
+		deadline,
+		course_id,
+		category_id,
+		task_id,
+		user_id
+	))
+
+	connection.commit()
+	connection.close()
+
+	return jsonify({
+		"message": "Task updated successfully"
+	})
+
+@app.route("/api/tasks/<int:task_id>", methods=["DELETE"])
+@login_required
+def api_delete_task(task_id):
+
+	user_id = session["user_id"]
+
+	connection = get_db_connection()
+
+	task = connection.execute("""
+		SELECT task_id
+		FROM tasks
+		WHERE task_id = ?
+		AND user_id = ?
+	""", (task_id, user_id)).fetchone()
+
+	if task is None:
+		connection.close()
+		return jsonify({"error": "Task not found"}), 404
+
+	connection.execute("""
+		DELETE FROM tasks
+		WHERE task_id = ?
+		AND user_id = ?
+	""", (task_id, user_id))
+
+	connection.commit()
+	connection.close()
+
+	return jsonify({
+		"message": "Task deleted successfully"
+	})
 
 
 @app.route("/profile")
