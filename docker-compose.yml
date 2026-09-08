@@ -5,3 +5,20 @@ services:
       - "5000:5000"
     env_file:
       - .env
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: study_manager
+      POSTGRES_USER: study_manager
+      POSTGRES_PASSWORD: study_manager_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+volumes:
+  postgres_data:  

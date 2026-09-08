@@ -1,9 +1,11 @@
-import sqlite3
+import psycopg
 import secrets
 import smtplib
 import os
 import hashlib
 
+
+from psycopg.rows import dict_row
 from flask import Flask, render_template,request,redirect,url_for,session,flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -40,8 +42,14 @@ def login_required(func):
 	return decorated_function
 
 def get_db_connection():
-	connection = sqlite3.connect("study_manager.db")
-	connection.row_factory = sqlite3.Row
+	connection = psycopg.connect(
+		host=os.getenv("DB_HOST"),
+		port=os.getenv("DB_PORT"),
+		dbname=os.getenv("DB_NAME"),
+		user=os.getenv("DB_USER"),
+		password=os.getenv("DB_PASSWORD"),
+		row_factory=dict_row
+	)
 	return connection
 
 def send_reset_email(receiver_email,reset_link):
@@ -127,7 +135,7 @@ def register():
 		existing_user = connection.execute("""
 			SELECT user_id
 			FROM users
-			WHERE email = ?
+			WHERE email = %s
 		""", (email,)).fetchone()
 
 		if existing_user is not None:
@@ -143,7 +151,7 @@ def register():
 		connection.execute("""
 			INSERT INTO users
 			(name,surname,display_name,birthdate,email,password_hashed)
-			VALUES(?,?,?,?,?,?)
+			VALUES(%s,%s,%s,%s,%s,%s)
 		""", (
 
 			name,
@@ -175,7 +183,7 @@ def login():
 
 		user = connection.execute("""
 			SELECT * FROM users
-			WHERE email = ?
+			WHERE email = %s
 		""",(email,)).fetchone()	
 	
 		connection.close()
@@ -207,7 +215,7 @@ def reset():
 
 		user = connection.execute("""
 			SELECT * FROM users
-			WHERE email = ?
+			WHERE email = %s
 		""",(email,)).fetchone()	
 
 
@@ -216,7 +224,7 @@ def reset():
 
 			connection.execute("""
 				DELETE FROM password_reset_tokens
-				WHERE user_id = ?
+				WHERE user_id = %s
 			""",(user_id,))
 			
 			token = secrets.token_urlsafe(32)
@@ -227,7 +235,7 @@ def reset():
 			connection.execute("""
 				INSERT INTO password_reset_tokens
 				(user_id,token,expires_at)
-				VALUES(?,?,?)
+				VALUES(%s,%s,%s)
 			""", (
 				user_id,
 				token_hash,
@@ -258,7 +266,7 @@ def reset_password(token):
 
 	reset_token = connection.execute("""
 		SELECT * FROM password_reset_tokens
-		WHERE token = ?
+		WHERE token = %s
 	""",(token_hash,)).fetchone()
 
 
@@ -308,7 +316,7 @@ def reset_password(token):
 		user = connection.execute("""
 			SELECT password_hashed
 			FROM users
-			WHERE user_id = ?
+			WHERE user_id = %s
 		""", (reset_token["user_id"],)).fetchone()
 
 		if check_password_hash(user["password_hashed"], newpass):
@@ -323,8 +331,8 @@ def reset_password(token):
 
 		connection.execute("""
 			UPDATE users
-			SET password_hashed = ?
-			WHERE user_id = ?
+			SET password_hashed = %s
+			WHERE user_id = %s
 		""", (
 			newpass_hashed,
 			reset_token["user_id"]
@@ -333,7 +341,7 @@ def reset_password(token):
 		connection.execute("""
 			UPDATE password_reset_tokens
 			SET  used = 1
-			WHERE user_id = ?	
+			WHERE user_id = %s	
 			""",(reset_token["user_id"],))
 	
 		connection.commit()
@@ -362,7 +370,7 @@ def home():
 	user = connection.execute("""
 		SELECT display_name
 		FROM users
-		WHERE user_id = ?
+		WHERE user_id = %s
 	""", (user_id,)).fetchone()
 
 	upcoming_tasks = connection.execute("""
@@ -378,7 +386,7 @@ def home():
 			ON tasks.course_id = courses.course_id
 		INNER JOIN categories
 			ON tasks.category_id = categories.category_id
-		WHERE tasks.user_id = ?
+		WHERE tasks.user_id = %s
 		ORDER BY tasks.deadline
 		LIMIT 5
 	""", (user_id,)).fetchall()
@@ -421,13 +429,13 @@ def addtask():
 	def render_addtask_form(error=None):
 		categories = connection.execute("""
 			SELECT * FROM categories
-			WHERE user_id = ?
+			WHERE user_id = %s
 			ORDER BY category_name
 		""", (user_id,)).fetchall()
 
 		courses = connection.execute("""
 			SELECT * FROM courses
-			WHERE user_id = ?
+			WHERE user_id = %s
 			ORDER BY course_name
 		""", (user_id,)).fetchall()
 		
@@ -452,18 +460,15 @@ def addtask():
 			if not newcat:
 				return render_addtask_form("! Category name cannot be empty !")
 
-			connection.execute("""
+			category_id = connection.execute("""
 				INSERT INTO categories
 				(category_name, user_id)
-				VALUES (?, ?)
+				VALUES (%s, %s)
+				RETURNING category_id
 			""", (
 				newcat,
 				user_id
-			))
-
-			category_id = connection.execute(
-				"SELECT last_insert_rowid()"
-			).fetchone()[0]
+			)).fetchone()["category_id"]
 
 		if category_id is None:
 			return render_addtask_form("! Invalid category !")
@@ -471,8 +476,8 @@ def addtask():
 		category = connection.execute("""
 					SELECT category_id
 					FROM categories
-					WHERE category_id = ?
-					AND user_id = ?
+					WHERE category_id = %s
+					AND user_id = %s
 				""", (category_id, user_id)).fetchone()
 
 		if category is None:
@@ -485,18 +490,15 @@ def addtask():
 			if not newcourse:
 				return render_addtask_form("! Course name cannot be empty !")
 
-			connection.execute("""
+			course_id = connection.execute("""
 				INSERT INTO courses
 				(course_name, user_id)
-				VALUES (?, ?)
+				VALUES (%s, %s)
+				RETURNING course_id
 			""", (
 				newcourse,
 				user_id
-			))
-
-			course_id = connection.execute(
-				"SELECT last_insert_rowid()"
-			).fetchone()[0]
+			)).fetchone()["course_id"]
 
 		if course_id is None:
 			return render_addtask_form("! Invalid course !")
@@ -504,8 +506,8 @@ def addtask():
 		course = connection.execute("""
 			SELECT course_id
 			FROM courses
-			WHERE course_id = ?
-			AND user_id = ?
+			WHERE course_id = %s
+			AND user_id = %s
 		""", (course_id, user_id)).fetchone()
 
 		if course is None:
@@ -518,7 +520,7 @@ def addtask():
 		connection.execute("""
 			INSERT INTO tasks
 			(task_name, description, deadline, course_id, category_id, user_id)
-			VALUES (?, ?, ?, ?, ?, ?)
+			VALUES (%s, %s, %s, %s, %s, %s)
 		""", (
 			task_name,
 			description,
@@ -535,13 +537,13 @@ def addtask():
 
 	categories = connection.execute("""
 		SELECT * FROM categories
-		WHERE user_id = ?
+		WHERE user_id = %s
 		ORDER BY category_name
 	""", (user_id,)).fetchall()
 
 	courses = connection.execute("""
 		SELECT * FROM courses
-		WHERE user_id = ?
+		WHERE user_id = %s
 		ORDER BY course_name
 	""", (user_id,)).fetchall()
 		
@@ -574,7 +576,7 @@ def tasks():
 		INNER JOIN categories
 			ON tasks.category_id = categories.category_id
 
-		WHERE tasks.user_id = ?
+		WHERE tasks.user_id = %s
 
 		ORDER BY tasks.deadline
 	""", (user_id,)).fetchall()
@@ -619,8 +621,8 @@ def task_detail(task_id):
 			ON tasks.course_id = courses.course_id
 		INNER JOIN categories
 			ON tasks.category_id = categories.category_id
-		WHERE tasks.task_id = ?
-		AND tasks.user_id = ?
+		WHERE tasks.task_id = %s
+		AND tasks.user_id = %s
 	""", (task_id, user_id)).fetchone()
 
 	connection.close()
@@ -655,22 +657,22 @@ def edittask(task_id):
 	task = connection.execute("""
 		SELECT *
 		FROM tasks
-		WHERE task_id = ?
-		AND user_id = ?
+		WHERE task_id = %s
+		AND user_id = %s
 	""", (task_id, user_id)).fetchone()
 
 	def render_edit_task_form(error=None):
 		categories = connection.execute("""
 			SELECT *
 			FROM categories
-			WHERE user_id = ?
+			WHERE user_id = %s
 			ORDER BY category_name
 		""", (user_id,)).fetchall()
 
 		courses = connection.execute("""
 			SELECT *
 			FROM courses
-			WHERE user_id = ?
+			WHERE user_id = %s
 			ORDER BY course_name
 		""", (user_id,)).fetchall()
 
@@ -701,18 +703,15 @@ def edittask(task_id):
 			if not newcat:
 				return render_edit_task_form("! Category name cannot be empty !")
 
-			connection.execute("""
+			category_id = connection.execute("""
 				INSERT INTO categories
 				(category_name, user_id)
-				VALUES (?, ?)
+				VALUES (%s, %s)
+				RETURNING category_id
 			""", (
 				newcat,
 				user_id
-			))
-
-			category_id = connection.execute(
-				"SELECT last_insert_rowid()"
-			).fetchone()[0]
+			)).fetchone()["category_id"]
 
 		if course_id == "new":
 
@@ -721,24 +720,21 @@ def edittask(task_id):
 			if not newcourse:
 				return render_edit_task_form("! Course name cannot be empty !")
 
-			connection.execute("""
+			course_id = connection.execute("""
 				INSERT INTO courses
 				(course_name, user_id)
-				VALUES (?, ?)
+				VALUES (%s, %s)
+				RETURNING course_id
 			""", (
 				newcourse,
 				user_id
-			))
-
-			course_id = connection.execute(
-				"SELECT last_insert_rowid()"
-			).fetchone()[0]
+			)).fetchone()["course_id"]
 
 		category = connection.execute("""
 			SELECT category_id
 			FROM categories
-			WHERE category_id = ?
-			AND user_id = ?
+			WHERE category_id = %s
+			AND user_id = %s
 		""", (category_id, user_id)).fetchone()
 
 		if category is None:
@@ -747,8 +743,8 @@ def edittask(task_id):
 		course = connection.execute("""
 			SELECT course_id
 			FROM courses
-			WHERE course_id = ?
-			AND user_id = ?
+			WHERE course_id = %s
+			AND user_id = %s
 		""", (course_id, user_id)).fetchone()
 
 		if course is None:
@@ -760,13 +756,13 @@ def edittask(task_id):
 
 		connection.execute("""
 			UPDATE tasks
-			SET task_name = ?,
-				description = ?,
-				deadline = ?,
-				course_id = ?,
-				category_id = ?
-			WHERE task_id = ?
-			AND user_id = ?
+			SET task_name = %s,
+				description = %s,
+				deadline = %s,
+				course_id = %s,
+				category_id = %s
+			WHERE task_id = %s
+			AND user_id = %s
 		""", (
 			task_name,
 			description,
@@ -785,14 +781,14 @@ def edittask(task_id):
 	categories = connection.execute("""
 		SELECT *
 		FROM categories
-		WHERE user_id = ?
+		WHERE user_id = %s
 		ORDER BY category_name
 	""", (user_id,)).fetchall()
 
 	courses = connection.execute("""
 		SELECT *
 		FROM courses
-		WHERE user_id = ?
+		WHERE user_id = %s
 		ORDER BY course_name
 	""", (user_id,)).fetchall()
 
@@ -815,7 +811,7 @@ def delete_task(task_id):
 
 	connection.execute("""
 		DELETE FROM tasks
-		WHERE task_id = ? AND user_id = ?
+		WHERE task_id = %s AND user_id = %s
 	""", (task_id, user_id))
 
 	connection.commit()
@@ -834,7 +830,7 @@ def profile():
 
 	user = connection.execute("""
 		SELECT * FROM users
-		WHERE user_id = ?
+		WHERE user_id = %s
 	""", (user_id,)).fetchone()
 	
 	connection.close()
@@ -853,7 +849,7 @@ def editprofile():
 	def render_edit_profile_form(error=None):
 		user = connection.execute("""
 			SELECT * FROM users
-			WHERE user_id = ?
+			WHERE user_id = %s
 		""", (user_id,)).fetchone()
 
 		connection.close()
@@ -878,8 +874,8 @@ def editprofile():
 		existing_user = connection.execute("""
 			SELECT user_id
 			FROM users
-			WHERE email = ?
-			AND user_id != ?
+			WHERE email = %s
+			AND user_id != %s
 		""", (email, user_id)).fetchone()
 
 		if existing_user is not None:
@@ -887,12 +883,12 @@ def editprofile():
 			
 		connection.execute(""" 
 			UPDATE users
-			SET name = ?,
-				surname = ?,
-				display_name = ?,
-				birthdate = ?,
-				email = ?
-			WHERE user_id = ?
+			SET name = %s,
+				surname = %s,
+				display_name = %s,
+				birthdate = %s,
+				email = %s
+			WHERE user_id = %s
 		""", (
 			name,
 			surname,
@@ -912,7 +908,7 @@ def editprofile():
 
 	user = connection.execute("""
 		SELECT * FROM users
-		WHERE user_id = ?
+		WHERE user_id = %s
 	""", (user_id,)).fetchone()
 	
 	connection.close()
@@ -953,8 +949,8 @@ def uploadprofilephoto():
 
 	connection.execute("""
 		UPDATE users
-		SET profile_photo = ?
-		WHERE user_id = ?
+		SET profile_photo = %s
+		WHERE user_id = %s
 	""", (filename, user_id))
 
 	connection.commit()
@@ -973,7 +969,7 @@ def changepassword():
 
 		user = connection.execute("""
 			SELECT * FROM users
-			WHERE user_id = ?
+			WHERE user_id = %s
 		""", (user_id,)).fetchone()
 
 		connection.close()
@@ -994,7 +990,7 @@ def changepassword():
 		connection = get_db_connection()
 		
 		user = connection.execute("""
-			SELECT password_hashed FROM users WHERE user_id = ?
+			SELECT password_hashed FROM users WHERE user_id = %s
 		""", (user_id,)).fetchone()	
 	
 		if len(newpass) < 8:
@@ -1009,8 +1005,8 @@ def changepassword():
 		
 		connection.execute("""
 			UPDATE users
-			SET password_hashed = ?
-			WHERE user_id = ?
+			SET password_hashed = %s
+			WHERE user_id = %s
 		""", (newpass_hashed, user_id))
 	
 		connection.commit()
