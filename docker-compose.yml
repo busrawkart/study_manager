@@ -11,9 +11,9 @@ services:
   db:
     image: postgres:13
     environment:
-      POSTGRES_DB: study_manager
-      POSTGRES_USER: study_manager
-      POSTGRES_PASSWORD: study_manager_password
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
