@@ -284,7 +284,7 @@ def reset_password(token):
 			token=token,
 			error="! This reset link has already been used !")
 
-	expires_at = datetime.fromisoformat(reset_token["expires_at"])
+	expires_at = reset_token["expires_at"]
 
 	if datetime.now() > expires_at:
 		connection.close()
