@@ -41,8 +41,15 @@ spec:
             - name: postgres-schema
               mountPath: /docker-entrypoint-initdb.d/schema.sql
               subPath: schema.sql
+ 
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
 
       volumes:
         - name: postgres-schema
           configMap:
             name: postgres-schema
+
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: postgres-pvc
