@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: study-manager-web
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: study-manager-web
+
+  template:
+    metadata:
+      labels:
+        app: study-manager-web
+
+    spec:
+      containers:
+        - name: study-manager-web
+          image: study_manager-web:latest
+
+          ports:
+            - containerPort: 5000
+
+          env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: web-secret
+                  key: SECRET_KEY
+
+            - name: MAIL_ADDRESS
+              valueFrom:
+                secretKeyRef:
+                  name: web-secret
+                  key: MAIL_ADDRESS
+
+            - name: MAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: web-secret
+                  key: MAIL_PASSWORD
+
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: web-secret
+                  key: DB_PASSWORD
+
+            - name: DB_HOST
+              value: postgres
+
+            - name: DB_PORT
+              value: "5432"
+
+            - name: DB_NAME
+              value: study_manager
+
+            - name: DB_USER
+              value: study_manager

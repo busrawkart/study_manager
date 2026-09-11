@@ -3,3 +3,5 @@ venv/
 __pycache__/
 *.pyc
 study_manager.db
+k8s/postgres-secret.yaml
+k8s/web-secret.yaml
